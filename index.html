@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VR Homes — VR内見不動産サイト</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-primary:#ffffff;
+  --bg-secondary:#f4f6f8;
+  --bg-tertiary:#eef1f5;
+  --text-primary:#0f1923;
+  --text-secondary:#6b7685;
+  --border:#e0e4ea;
+  --blue:#185FA5;
+  --blue-light:#E6F1FB;
+  --blue-mid:#B5D4F4;
+  --blue-dark:#0C447C;
+  --blue-navy:#042C53;
+  --green:#3B6D11;
+  --green-light:#EAF3DE;
+  --red:#A32D2D;
+  --red-light:#FCEBEB;
+  --red-border:#F09595;
+  --warn:#854F0B;
+  --warn-light:#FDF3E3;
+  --radius-sm:6px;
+  --radius-md:8px;
+  --radius-lg:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',sans-serif;background:var(--bg-tertiary)}
+
+/* ── Tab bar ── */
+.tab-bar{background:var(--bg-primary);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;padding:0 12px;position:sticky;top:0;z-index:100}
+.tab{padding:14px 14px 12px;font-size:12px;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:color .15s}
+.tab:hover{color:var(--text-primary)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
+.screen{display:none}.screen.active{display:block}
+
+/* ── Nav ── */
+.nav{background:var(--bg-primary);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:48px;z-index:90}
+.logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:500;color:var(--text-primary);cursor:pointer;text-decoration:none}
+.logo-icon{width:32px;height:32px;background:var(--blue-light);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:16px}
+.nav-links{display:flex;gap:24px}
+.nl{font-size:13px;color:var(--text-secondary);cursor:pointer;padding:2px 0;border-bottom:2px solid transparent;transition:color .15s}
+.nl:hover,.nl.on{color:var(--blue);border-bottom-color:var(--blue)}
+.nav-r{display:flex;gap:8px}
+
+/* ── Buttons ── */
+.btn{font-size:13px;padding:7px 16px;border-radius:var(--radius-md);cursor:pointer;font-family:inherit;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--text-primary);transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--bg-secondary)}
+.btn-p{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-p:hover{background:var(--blue-dark)}
+.btn-sm{font-size:11px;padding:5px 11px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── Tags ── */
+.tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500}
+.tb{background:var(--blue-light);color:var(--blue)}
+.tg{background:var(--green-light);color:var(--green)}
+.tgr{background:var(--bg-secondary);color:var(--text-secondary)}
+.tr{background:var(--red-light);color:var(--red)}
+
+/* ── Form fields ── */
+.field{margin-bottom:16px}
+.flabel{font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.req{color:var(--red);font-size:11px}
+.finput{width:100%;font-size:13px;padding:9px 12px;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg-primary);color:var(--text-primary);font-family:inherit;transition:border-color .15s}
+.finput:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-light)}
+.finput.err{border-color:var(--red);background:var(--red-light)}
+.finput.ok{border-color:var(--green)}
+
+/* ── Card ── */
+.card{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px}
+
+/* ── Property card ── */
+.prop-card{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.prop-card:hover{border-color:var(--blue-mid);box-shadow:0 2px 12px rgba(24,95,165,.08)}
+.prop-img{height:110px;background:#dbe8f4;display:flex;align-items:center;justify-content:center;position:relative}
+.vr-badge{position:absolute;top:8px;left:8px;background:var(--blue);color:#fff;font-size:9px;font-weight:500;padding:3px 7px;border-radius:4px}
+.fav-btn{position:absolute;top:8px;right:8px;width:28px;height:28px;background:var(--bg-primary);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);font-size:13px;transition:all .15s}
+.fav-btn.on{color:var(--red);border-color:var(--red-border)}
+
+/* ════════════════════════
+   SCREEN: LOGIN
+════════════════════════ */
+#s-login{min-height:calc(100vh - 48px);display:flex;align-items:center;justify-content:center;padding:40px 16px;background:var(--bg-tertiary)}
+.auth-wrap{width:100%;max-width:400px}
+.auth-logo{text-align:center;margin-bottom:28px}
+.auth-logo-icon{width:52px;height:52px;background:var(--blue-light);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:var(--blue);font-size:26px}
+.auth-title{font-size:20px;font-weight:500;color:var(--text-primary)}
+.auth-sub{font-size:13px;color:var(--text-secondary);margin-top:4px}
+.auth-tabs{display:flex;border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:24px}
+.auth-tab{flex:1;padding:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;border:none;background:transparent;color:var(--text-secondary);transition:all .15s}
+.auth-tab.on{background:var(--blue);color:#fff}
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--text-secondary);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.social-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg-primary);font-size:13px;color:var(--text-primary);cursor:pointer;font-family:inherit;transition:all .15s}
+.social-btn:hover{background:var(--bg-secondary)}
+.login-link{text-align:center;font-size:13px;color:var(--text-secondary);margin-top:16px}
+.login-link a{color:var(--blue);cursor:pointer;font-weight:500}
+
+/* ════════════════════════
+   SCREEN: TOP
+════════════════════════ */
+.hero{background:var(--blue-light);padding:32px 24px}
+.hero-eyebrow{font-size:11px;font-weight:500;color:var(--blue);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.hero-title{font-size:22px;font-weight:500;color:var(--blue-navy);line-height:1.4;margin-bottom:16px}
+.search-bar{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px}
+.search-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.search-field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:100px}
+.search-label{font-size:11px;color:var(--text-secondary);font-weight:500}
+.results-bar{padding:12px 24px;background:var(--bg-primary);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;padding:20px 24px}
+.prop-body{padding:10px 12px}
+.prop-price{font-size:15px;font-weight:500;color:var(--blue-navy);margin-bottom:2px}
+.prop-name{font-size:13px;color:var(--text-primary);margin-bottom:3px}
+.prop-loc{font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:3px;margin-bottom:7px}
+.prop-tags{display:flex;gap:4px;flex-wrap:wrap}
+.prop-footer{padding:8px 12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.prop-area{font-size:11px;color:var(--text-secondary)}
+.detail-link{font-size:11px;color:var(--blue);font-weight:500;display:flex;align-items:center;gap:2px}
+.pagination{display:flex;justify-content:center;gap:4px;padding:16px 24px 28px}
+.page-btn{width:34px;height:34px;border-radius:var(--radius-md);border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text-secondary);transition:all .15s}
+.page-btn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.page-btn:hover:not(.on){background:var(--bg-secondary)}
+
+/* ════════════════════════
+   SCREEN: MAP
+════════════════════════ */
+.map-wrap{display:flex;height:calc(100vh - 104px)}
+.map-sidebar{width:220px;flex-shrink:0;background:var(--bg-primary);border-right:1px solid var(--border);overflow-y:auto;padding:14px}
+.map-area{flex:1;background:linear-gradient(135deg,#cfe0ea,#d8eaf3 50%,#c8dae6);position:relative;overflow:hidden}
+.map-canvas{position:relative;width:100%;height:100%}
+.pin{position:absolute;cursor:pointer}
+.pin-circle{width:30px;height:30px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:500;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:transform .15s}
+.pin-circle:hover{transform:scale(1.1)}
+.pin-popup{display:none;position:absolute;bottom:38px;left:50%;transform:translateX(-50%);background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;min-width:170px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:10}
+.pin-popup.show{display:block}
+.result-item{background:var(--bg-secondary);border-radius:var(--radius-md);padding:10px;margin-bottom:8px;cursor:pointer;border:1px solid transparent;transition:border-color .15s}
+.result-item:hover,.result-item.on{border-color:var(--blue-mid);background:var(--blue-light)}
+
+/* ════════════════════════
+   SCREEN: DETAIL/VR
+════════════════════════ */
+.detail-wrap{display:flex;min-height:calc(100vh - 104px)}
+.detail-main{flex:1;padding:20px 24px;overflow-y:auto}
+.detail-sidebar{width:200px;flex-shrink:0;border-left:1px solid var(--border);padding:20px 16px;background:var(--bg-primary)}
+.vr-viewer{background:#1a2740;border-radius:var(--radius-lg);height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;position:relative;cursor:pointer;overflow:hidden}
+.vr-start{text-align:center}
+.vr-start-icon{width:56px;height:56px;border-radius:50%;background:rgba(24,95,165,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:28px;color:var(--blue-mid)}
+.vr-controls{display:none;text-align:center;width:100%}
+.room-tag{background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:3px 8px;border-radius:4px;position:absolute;bottom:10px;left:12px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.info-box{background:var(--bg-secondary);border-radius:var(--radius-md);padding:12px}
+.info-box-title{font-size:10px;color:var(--text-secondary);font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.info-table{width:100%;font-size:12px;border-collapse:collapse}
+.info-table td{padding:4px 0;vertical-align:top}
+.info-table td:first-child{color:var(--text-secondary);white-space:nowrap;padding-right:10px}
+.info-table td:last-child{text-align:right;font-weight:500}
+
+/* ════════════════════════
+   SCREEN: MYPAGE
+════════════════════════ */
+.mypage-wrap{display:flex;min-height:calc(100vh - 104px)}
+.mypage-sidebar{width:200px;flex-shrink:0;background:var(--bg-primary);border-right:1px solid var(--border);padding:24px 16px}
+.mypage-main{flex:1;padding:24px}
+.avatar{width:56px;height:56px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:500;color:var(--blue);margin:0 auto 10px}
+.mp-nav-item{display:flex;align-items:center;gap:7px;padding:9px 10px;border-radius:var(--radius-md);cursor:pointer;font-size:13px;color:var(--text-secondary);margin-bottom:4px;transition:all .15s}
+.mp-nav-item:hover{background:var(--bg-secondary)}
+.mp-nav-item.on{background:var(--blue-light);color:var(--blue);font-weight:500}
+.badge{margin-left:auto;background:var(--blue);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px}
+.prop-list-item{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);display:flex;align-items:center;gap:14px;padding:14px;margin-bottom:10px;transition:border-color .15s}
+.prop-list-item:hover{border-color:var(--blue-mid)}
+.prop-thumb{width:72px;height:56px;background:#dbe8f4;border-radius:var(--radius-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#85B7EB;font-size:22px}
+.hist-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px}
+.hist-item:last-child{border-bottom:none}
+
+/* ════════════════════════
+   SCREEN: ADMIN
+════════════════════════ */
+.admin-wrap{display:flex;min-height:calc(100vh - 104px)}
+.admin-sidebar{width:180px;flex-shrink:0;background:var(--bg-primary);border-right:1px solid var(--border);padding:20px 14px}
+.admin-main{flex:1;padding:20px 24px;overflow-y:auto}
+.admin-nav-item{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:var(--radius-md);cursor:pointer;font-size:13px;color:var(--text-secondary);margin-bottom:4px;transition:all .15s}
+.admin-nav-item:hover{background:var(--bg-secondary)}
+.admin-nav-item.on{background:var(--blue-light);color:var(--blue);font-weight:500}
+.stat-mini{background:var(--bg-secondary);border-radius:var(--radius-md);padding:10px;margin-bottom:8px}
+.stat-mini-label{font-size:10px;color:var(--text-secondary);margin-bottom:3px}
+.stat-mini-val{font-size:20px;font-weight:500;color:var(--text-primary)}
+.admin-table-wrap{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.admin-table-head{background:var(--bg-secondary);padding:9px 14px;font-size:11px;font-weight:500;color:var(--text-secondary);display:grid;gap:0}
+.admin-table-row{padding:10px 14px;font-size:12px;border-top:1px solid var(--border);display:grid;gap:0;align-items:center;transition:background .1s}
+.admin-table-row:hover{background:var(--bg-secondary)}
+.stat-card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stat-card{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
+.stat-card-label{font-size:11px;color:var(--text-secondary);margin-bottom:6px}
+.stat-card-val{font-size:26px;font-weight:500;color:var(--text-primary)}
+.bar-track{flex:2;background:var(--bg-secondary);border-radius:3px;height:8px;overflow:hidden}
+.bar-fill{height:100%;background:var(--blue);border-radius:3px}
+
+/* ── Add property form ── */
+.add-form{background:var(--bg-secondary);border:1px solid #B5D4F4;border-radius:var(--radius-lg);padding:16px;margin-bottom:16px;display:none}
+.add-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pass-wrap{position:relative}
+.pass-wrap .finput{padding-right:40px}
+.eye-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:16px;padding:0;display:flex;align-items:center}
+.str-bar{display:flex;gap:3px;margin-top:6px}
+.str-seg{flex:1;height:3px;border-radius:2px;background:var(--border)}
+.str-seg.weak{background:var(--red)}
+.str-seg.mid{background:#BA7517}
+.str-seg.strong{background:var(--green)}
+.err-msg{font-size:11px;color:var(--red);margin-top:4px;display:none;align-items:center;gap:3px}
+.ok-msg{font-size:11px;color:var(--green);margin-top:4px;display:none;align-items:center;gap:3px}
+</style>
+</head>
+<body>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <div class="tab active" onclick="showScreen('login')"><i class="ti ti-lock"></i>ログイン</div>
+  <div class="tab" onclick="showScreen('top')"><i class="ti ti-home"></i>トップ</div>
+  <div class="tab" onclick="showScreen('map')"><i class="ti ti-map-pin"></i>マップ</div>
+  <div class="tab" onclick="showScreen('detail')"><i class="ti ti-building"></i>物件詳細/VR</div>
+  <div class="tab" onclick="showScreen('mypage')"><i class="ti ti-user"></i>マイページ</div>
+  <div class="tab" onclick="showScreen('admin')"><i class="ti ti-settings"></i>管理者</div>
+</div>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div class="screen active" id="s-login">
+  <div style="min-height:calc(100vh - 48px);display:flex;align-items:center;justify-content:center;padding:40px 16px;background:var(--bg-tertiary)">
+    <div class="auth-wrap">
+      <div class="auth-logo">
+        <div class="auth-logo-icon"><i class="ti ti-building"></i></div>
+        <div class="auth-title">VR Homes</div>
+        <div class="auth-sub">VR内見不動産サービス</div>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab on" id="atab-login" onclick="switchAuth('login')">ログイン</button>
+        <button class="auth-tab" id="atab-reg" onclick="switchAuth('reg')">新規登録</button>
+      </div>
+      <div class="card" style="padding:22px">
+        <div id="auth-form">
+          <div class="field"><div class="flabel">メールアドレス</div><input class="finput" type="text" placeholder="example@email.com"></div>
+          <div class="field" style="margin-bottom:6px"><div class="flabel">パスワード</div>
+            <div class="pass-wrap"><input class="finput" id="lpass" type="password" placeholder="••••••••">
+            <button class="eye-btn" onclick="toggleEye('lpass',this)"><i class="ti ti-eye"></i></button></div>
+          </div>
+          <div style="text-align:right;font-size:11px;color:var(--blue);cursor:pointer;margin-bottom:18px">パスワードをお忘れですか？</div>
+          <button class="btn btn-p" style="width:100%;padding:11px;font-size:14px;justify-content:center" onclick="showScreen('top')">
+            ログイン <i class="ti ti-arrow-right"></i>
+          </button>
+        </div>
+        <div class="divider">または</div>
+        <button class="social-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Google でログイン
+        </button>
+        <div class="login-link">アカウントをお持ちでない方は <a onclick="switchAuth('reg')">新規登録</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TOP ══════════ -->
+<div class="screen" id="s-top">
+  <nav class="nav">
+    <div class="logo"><div class="logo-icon"><i class="ti ti-building"></i></div>VR Homes</div>
+    <div class="nav-links">
+      <span class="nl on">物件を探す</span>
+      <span class="nl" onclick="showScreen('map')">マップで探す</span>
+      <span class="nl">VR内見とは</span>
+    </div>
+    <div class="nav-r">
+      <button class="btn btn-sm" onclick="showScreen('mypage')"><i class="ti ti-user"></i>マイページ</button>
+      <button class="btn btn-p btn-sm" onclick="showScreen('admin')"><i class="ti ti-settings"></i>管理者</button>
+    </div>
+  </nav>
+  <div class="hero">
+    <div class="hero-eyebrow">VR対応物件 掲載中</div>
+    <div class="hero-title">自宅にいながら、360°内見できる<br>物件を探そう</div>
+    <div class="search-bar">
+      <div class="search-row">
+        <div class="search-field">
+          <span class="search-label">エリア</span>
+          <select class="finput" style="padding:7px 10px;font-size:13px">
+            <option>都道府県を選択</option><option>東京都</option><option>神奈川県</option><option>大阪府</option><option>愛知県</option>
+          </select>
+        </div>
+        <div class="search-field">
+          <span class="search-label">家賃上限</span>
+          <select class="finput" style="padding:7px 10px;font-size:13px">
+            <option>上限なし</option><option>〜5万円</option><option>〜8万円</option><option>〜10万円</option><option>〜15万円</option>
+          </select>
+        </div>
+        <div class="search-field">
+          <span class="search-label">間取り</span>
+          <select class="finput" style="padding:7px 10px;font-size:13px">
+            <option>指定なし</option><option>1K / 1DK</option><option>1LDK</option><option>2LDK</option><option>3LDK〜</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap" onclick="this.querySelector('.toggle').classList.toggle('on')">
+          <div class="toggle on" style="width:36px;height:20px;background:var(--blue-mid);border-radius:10px;position:relative;transition:background .2s;flex-shrink:0">
+            <div style="position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .2s"></div>
+          </div>
+          <span style="font-size:12px;color:var(--text-secondary)">VRのみ</span>
+        </div>
+        <button class="btn btn-p" style="padding:8px 20px" onclick="this.textContent='検索中…';setTimeout(()=>this.innerHTML='<i class=\"ti ti-search\"></i> 検索',600)">
+          <i class="ti ti-search"></i> 検索
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="results-bar">
+    <span style="font-size:13px;color:var(--text-secondary)"><strong style="color:var(--text-primary)">24</strong> 件の物件</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-sm" onclick="showScreen('map')" style="background:var(--blue-light);color:var(--blue);border-color:var(--blue-mid)"><i class="ti ti-map-pin"></i>マップで見る</button>
+      <select class="finput" style="padding:5px 9px;font-size:12px;width:auto"><option>新着順</option><option>家賃が安い順</option><option>家賃が高い順</option><option>面積が広い順</option></select>
+    </div>
+  </div>
+  <div class="card-grid" id="card-grid"></div>
+  <div class="pagination">
+    <button class="page-btn"><i class="ti ti-chevron-left" style="font-size:13px"></i></button>
+    <button class="page-btn on">1</button>
+    <button class="page-btn">2</button>
+    <button class="page-btn">3</button>
+    <button class="page-btn" style="width:auto;padding:0 8px;font-size:12px">...</button>
+    <button class="page-btn">8</button>
+    <button class="page-btn"><i class="ti ti-chevron-right" style="font-size:13px"></i></button>
+  </div>
+</div>
+
+<!-- ══════════ MAP ══════════ -->
+<div class="screen" id="s-map">
+  <nav class="nav">
+    <div class="logo"><div class="logo-icon"><i class="ti ti-building"></i></div>VR Homes</div>
+    <div class="nav-links"><span class="nl" onclick="showScreen('top')">← 一覧</span><span class="nl on">マップ</span></div>
+    <div class="nav-r"><button class="btn btn-sm" onclick="showScreen('mypage')"><i class="ti ti-user"></i>マイページ</button></div>
+  </nav>
+  <div class="map-wrap">
+    <div class="map-sidebar">
+      <div style="font-size:12px;font-weight:500;margin-bottom:10px">絞り込み</div>
+      <div class="field"><div class="flabel">家賃上限</div><select class="finput" style="padding:7px 9px;font-size:12px"><option>〜10万円</option><option>〜8万円</option><option>〜6万円</option></select></div>
+      <div class="field"><div class="flabel">間取り</div><select class="finput" style="padding:7px 9px;font-size:12px"><option>指定なし</option><option>1K</option><option>1LDK</option><option>2LDK</option></select></div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);margin-bottom:14px;cursor:pointer">
+        <input type="checkbox" checked style="accent-color:var(--blue)"> VR対応のみ
+      </label>
+      <button class="btn btn-p" style="width:100%;padding:7px;font-size:12px;justify-content:center;margin-bottom:18px">適用</button>
+      <div style="font-size:12px;font-weight:500;margin-bottom:8px">検索結果 <span style="font-weight:400;color:var(--text-secondary)">3件</span></div>
+      <div class="result-item on" onclick="showScreen('detail')">
+        <div style="font-size:12px;font-weight:500">コート渋谷</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin:2px 0">¥92,000 / 2LDK</div>
+        <span class="tag tb" style="font-size:9px">VR対応</span>
+      </div>
+      <div class="result-item" onclick="showScreen('detail')">
+        <div style="font-size:12px;font-weight:500">グランツ新宿</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin:2px 0">¥68,000 / 1LDK</div>
+        <span class="tag tb" style="font-size:9px">VR対応</span>
+      </div>
+      <div class="result-item" onclick="showScreen('detail')">
+        <div style="font-size:12px;font-weight:500">ソレイユ目黒</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin:2px 0">¥115,000 / 3LDK</div>
+        <span class="tag tb" style="font-size:9px">VR対応</span>
+      </div>
+    </div>
+    <div class="map-area">
+      <div class="map-canvas">
+        <!-- Grid lines for map feel -->
+        <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:.15" xmlns="http://www.w3.org/2000/svg">
+          <defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#185FA5" stroke-width="0.5"/></pattern></defs>
+          <rect width="100%" height="100%" fill="url(#grid)"/>
+        </svg>
+        <!-- Roads -->
+        <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:.2" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="40%" x2="100%" y2="40%" stroke="#185FA5" stroke-width="3"/>
+          <line x1="0" y1="65%" x2="100%" y2="65%" stroke="#185FA5" stroke-width="2"/>
+          <line x1="35%" y1="0" x2="35%" y2="100%" stroke="#185FA5" stroke-width="3"/>
+          <line x1="60%" y1="0" x2="60%" y2="100%" stroke="#185FA5" stroke-width="2"/>
+        </svg>
+        <!-- Pins -->
+        <div class="pin" style="top:32%;left:36%" onclick="togglePin('pa')">
+          <div class="pin-circle">A</div>
+          <div class="pin-popup" id="pa">
+            <div style="font-size:13px;font-weight:500;margin-bottom:3px">コート渋谷</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:7px">¥92,000 / 2LDK / 48㎡</div>
+            <span class="tag tb" style="font-size:9px;margin-bottom:10px;display:inline-flex">VR対応</span>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button class="btn btn-sm" style="flex:1;font-size:11px;justify-content:center" onclick="document.getElementById('pa').classList.remove('show')">閉じる</button>
+              <button class="btn btn-p btn-sm" style="flex:1;font-size:11px;justify-content:center" onclick="showScreen('detail')">詳細 →</button>
+            </div>
+          </div>
+        </div>
+        <div class="pin" style="top:22%;left:55%" onclick="togglePin('pb')">
+          <div class="pin-circle">B</div>
+          <div class="pin-popup" id="pb">
+            <div style="font-size:13px;font-weight:500;margin-bottom:3px">グランツ新宿</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:7px">¥68,000 / 1LDK / 33㎡</div>
+            <span class="tag tb" style="font-size:9px;margin-bottom:10px;display:inline-flex">VR対応</span>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button class="btn btn-sm" style="flex:1;font-size:11px;justify-content:center" onclick="document.getElementById('pb').classList.remove('show')">閉じる</button>
+              <button class="btn btn-p btn-sm" style="flex:1;font-size:11px;justify-content:center" onclick="showScreen('detail')">詳細 →</button>
+            </div>
+          </div>
+        </div>
+        <div class="pin" style="top:50%;left:46%" onclick="togglePin('pc')">
+          <div class="pin-circle">C</div>
+          <div class="pin-popup" id="pc">
+            <div style="font-size:13px;font-weight:500;margin-bottom:3px">ソレイユ目黒</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:7px">¥115,000 / 3LDK / 62㎡</div>
+            <span class="tag tb" style="font-size:9px;margin-bottom:10px;display:inline-flex">VR対応</span>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button class="btn btn-sm" style="flex:1;font-size:11px;justify-content:center" onclick="document.getElementById('pc').classList.remove('show')">閉じる</button>
+              <button class="btn btn-p btn-sm" style="flex:1;font-size:11px;justify-content:center" onclick="showScreen('detail')">詳細 →</button>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute;bottom:12px;right:12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-md);padding:7px 12px;font-size:11px;color:var(--text-secondary)">
+          <i class="ti ti-info-circle"></i> ピンをクリックで物件情報を表示
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DETAIL / VR ══════════ -->
+<div class="screen" id="s-detail">
+  <nav class="nav">
+    <div class="logo"><div class="logo-icon"><i class="ti ti-building"></i></div>VR Homes</div>
+    <div class="nav-r">
+      <button class="btn btn-sm" onclick="showScreen('top')"><i class="ti ti-arrow-left"></i>一覧へ</button>
+      <button class="btn btn-sm" onclick="showScreen('mypage')"><i class="ti ti-user"></i>マイページ</button>
+    </div>
+  </nav>
+  <div class="detail-wrap">
+    <div class="detail-main">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+        <div>
+          <h1 style="font-size:20px;font-weight:500;color:var(--text-primary);margin-bottom:4px">コート渋谷</h1>
+          <div style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:5px">
+            <i class="ti ti-map-pin"></i> 渋谷区桜丘町1-2-3 ／ 渋谷駅 徒歩3分
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <span class="tag tb"><i class="ti ti-360-view"></i>VR対応</span>
+          <span class="tag tg">2LDK</span>
+          <span class="tag" style="background:var(--warn-light);color:var(--warn)">新着</span>
+        </div>
+      </div>
+      <!-- VR Viewer -->
+      <div class="vr-viewer" id="vr-viewer" onclick="toggleVR()">
+        <div class="vr-start" id="vr-start">
+          <div class="vr-start-icon"><i class="ti ti-360-view"></i></div>
+          <div style="color:var(--blue-mid);font-size:14px;font-weight:500">VR内見を開始する</div>
+          <div style="color:#85B7EB;font-size:12px;margin-top:4px">クリックして360°バーチャル内見</div>
+        </div>
+        <div class="vr-controls" id="vr-controls">
+          <div style="color:var(--blue-mid);font-size:13px;font-weight:500;margin-bottom:12px">VR内見中 — クリックで終了</div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px">
+            <div style="width:38px;height:38px;border-radius:50%;background:rgba(24,95,165,.5);display:flex;align-items:center;justify-content:center;color:var(--blue-mid);font-size:18px;cursor:pointer"><i class="ti ti-arrow-left"></i></div>
+            <div style="width:38px;height:38px;border-radius:50%;background:rgba(24,95,165,.5);display:flex;align-items:center;justify-content:center;color:var(--blue-mid);font-size:18px;cursor:pointer"><i class="ti ti-arrow-up"></i></div>
+            <div style="width:38px;height:38px;border-radius:50%;background:rgba(24,95,165,.5);display:flex;align-items:center;justify-content:center;color:var(--blue-mid);font-size:18px;cursor:pointer"><i class="ti ti-arrow-right"></i></div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center">
+            <div class="room-pill on" onclick="event.stopPropagation();switchRoom(this,'リビング')" style="background:rgba(24,95,165,.7);color:var(--blue-mid);font-size:11px;padding:5px 12px;border-radius:16px;cursor:pointer">リビング</div>
+            <div class="room-pill" onclick="event.stopPropagation();switchRoom(this,'寝室')" style="background:rgba(24,95,165,.3);color:#85B7EB;font-size:11px;padding:5px 12px;border-radius:16px;cursor:pointer">寝室</div>
+            <div class="room-pill" onclick="event.stopPropagation();switchRoom(this,'キッチン')" style="background:rgba(24,95,165,.3);color:#85B7EB;font-size:11px;padding:5px 12px;border-radius:16px;cursor:pointer">キッチン</div>
+            <div class="room-pill" onclick="event.stopPropagation();switchRoom(this,'洗面台')" style="background:rgba(24,95,165,.3);color:#85B7EB;font-size:11px;padding:5px 12px;border-radius:16px;cursor:pointer">洗面台</div>
+          </div>
+        </div>
+        <div class="room-tag" id="room-tag" style="display:none">現在: リビング</div>
+      </div>
+      <!-- Info -->
+      <div class="info-grid">
+        <div class="info-box">
+          <div class="info-box-title">物件情報</div>
+          <table class="info-table">
+            <tr><td>家賃</td><td>¥92,000</td></tr>
+            <tr><td>間取り</td><td>2LDK</td></tr>
+            <tr><td>専有面積</td><td>48.0㎡</td></tr>
+            <tr><td>築年数</td><td>3年</td></tr>
+            <tr><td>階数</td><td>5階 / 全10階</td></tr>
+            <tr><td>向き</td><td>南向き</td></tr>
+          </table>
+        </div>
+        <div class="info-box">
+          <div class="info-box-title">設備・条件</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            <span class="tag tgr">オートロック</span>
+            <span class="tag tgr">宅配BOX</span>
+            <span class="tag tgr">浴室乾燥機</span>
+            <span class="tag tgr">ペット可</span>
+            <span class="tag tgr">南向き</span>
+            <span class="tag tgr">インターネット無料</span>
+            <span class="tag tgr">駐輪場あり</span>
+          </div>
+          <div style="margin-top:12px">
+            <div class="info-box-title">初期費用</div>
+            <table class="info-table">
+              <tr><td>敷金</td><td>2ヶ月</td></tr>
+              <tr><td>礼金</td><td>1ヶ月</td></tr>
+              <tr><td>管理費</td><td>¥5,000/月</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Map placeholder -->
+      <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);height:100px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:12px;margin-bottom:16px">
+        <i class="ti ti-map" style="font-size:16px;margin-right:6px"></i> 周辺地図（Google Maps）
+      </div>
+    </div>
+    <!-- Sidebar -->
+    <div class="detail-sidebar">
+      <div style="font-size:22px;font-weight:500;color:var(--blue-navy);margin-bottom:2px">¥92,000<span style="font-size:12px;font-weight:400;color:var(--text-secondary)">/月</span></div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:18px">管理費 ¥5,000 込み</div>
+      <button id="fav-detail-btn" class="btn" style="width:100%;padding:9px;font-size:12px;justify-content:center;margin-bottom:8px" onclick="toggleFavDetail()">
+        <i class="ti ti-heart"></i> お気に入り登録
+      </button>
+      <button class="btn btn-p" style="width:100%;padding:9px;font-size:12px;justify-content:center;margin-bottom:20px">
+        <i class="ti ti-mail"></i> 問い合わせ
+      </button>
+      <div style="border-top:1px solid var(--border);padding-top:16px">
+        <div style="font-size:12px;font-weight:500;margin-bottom:10px;color:var(--text-primary)">資料ダウンロード</div>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-secondary);margin-bottom:7px;cursor:pointer">
+          <input type="checkbox" checked style="accent-color:var(--blue)"> PDF形式
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-secondary);margin-bottom:14px;cursor:pointer">
+          <input type="checkbox" style="accent-color:var(--blue)"> CSV形式
+        </label>
+        <button class="btn" style="width:100%;padding:8px;font-size:12px;justify-content:center">
+          <i class="ti ti-download"></i> ダウンロード
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MYPAGE ══════════ -->
+<div class="screen" id="s-mypage">
+  <nav class="nav">
+    <div class="logo"><div class="logo-icon"><i class="ti ti-building"></i></div>VR Homes</div>
+    <div class="nav-r">
+      <button class="btn btn-sm" onclick="showScreen('top')"><i class="ti ti-home"></i>トップ</button>
+      <button class="btn btn-sm" onclick="showScreen('login')">ログアウト</button>
+    </div>
+  </nav>
+  <div class="mypage-wrap">
+    <div class="mypage-sidebar">
+      <div style="text-align:center;margin-bottom:24px">
+        <div class="avatar">田</div>
+        <div style="font-size:14px;font-weight:500;color:var(--text-primary)">田中 太郎</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px">tanaka@email.com</div>
+      </div>
+      <div class="mp-nav-item on" onclick="switchMp('fav',this)"><i class="ti ti-heart"></i>お気に入り<span class="badge">2</span></div>
+      <div class="mp-nav-item" onclick="switchMp('hist',this)"><i class="ti ti-history"></i>閲覧履歴</div>
+      <div class="mp-nav-item" onclick="switchMp('prof',this)"><i class="ti ti-settings"></i>プロフィール</div>
+    </div>
+    <div class="mypage-main">
+      <!-- Favorites -->
+      <div id="mp-fav">
+        <h2 style="font-size:16px;font-weight:500;margin-bottom:16px;color:var(--text-primary)">お気に入り物件</h2>
+        <div class="prop-list-item">
+          <div class="prop-thumb"><i class="ti ti-building"></i></div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:500;margin-bottom:3px">コート渋谷</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">渋谷区 ／ ¥92,000 ／ 2LDK ／ 48㎡</div>
+            <div style="display:flex;gap:5px"><span class="tag tb" style="font-size:10px">VR対応</span><span class="tag tg" style="font-size:10px">ペット可</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="btn btn-sm" onclick="showScreen('detail')">詳細を見る</button>
+            <button class="btn btn-sm" style="color:var(--red);border-color:var(--red-border)">削除</button>
+          </div>
+        </div>
+        <div class="prop-list-item">
+          <div class="prop-thumb"><i class="ti ti-building"></i></div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:500;margin-bottom:3px">ソレイユ目黒</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">目黒区 ／ ¥115,000 ／ 3LDK ／ 62㎡</div>
+            <div style="display:flex;gap:5px"><span class="tag tb" style="font-size:10px">VR対応</span><span class="tag tgr" style="font-size:10px">南向き</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="btn btn-sm" onclick="showScreen('detail')">詳細を見る</button>
+            <button class="btn btn-sm" style="color:var(--red);border-color:var(--red-border)">削除</button>
+          </div>
+        </div>
+      </div>
+      <!-- History -->
+      <div id="mp-hist" style="display:none">
+        <h2 style="font-size:16px;font-weight:500;margin-bottom:16px;color:var(--text-primary)">閲覧履歴</h2>
+        <div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
+          <div class="hist-item"><div><div style="font-size:13px;font-weight:500;margin-bottom:2px">コート渋谷</div><div style="font-size:11px;color:var(--text-secondary)">渋谷区 / 2LDK</div></div><div style="text-align:right;font-size:11px;color:var(--text-secondary)">1時間前<div style="margin-top:4px"><button class="btn btn-sm" onclick="showScreen('detail')" style="font-size:10px">再閲覧</button></div></div></div>
+          <div class="hist-item"><div><div style="font-size:13px;font-weight:500;margin-bottom:2px">グランツ新宿</div><div style="font-size:11px;color:var(--text-secondary)">新宿区 / 1LDK</div></div><div style="text-align:right;font-size:11px;color:var(--text-secondary)">昨日<div style="margin-top:4px"><button class="btn btn-sm" onclick="showScreen('detail')" style="font-size:10px">再閲覧</button></div></div></div>
+          <div class="hist-item"><div><div style="font-size:13px;font-weight:500;margin-bottom:2px">ソレイユ目黒</div><div style="font-size:11px;color:var(--text-secondary)">目黒区 / 3LDK</div></div><div style="text-align:right;font-size:11px;color:var(--text-secondary)">3日前<div style="margin-top:4px"><button class="btn btn-sm" onclick="showScreen('detail')" style="font-size:10px">再閲覧</button></div></div></div>
+          <div class="hist-item"><div><div style="font-size:13px;font-weight:500;margin-bottom:2px">アーバン品川</div><div style="font-size:11px;color:var(--text-secondary)">品川区 / 1LDK</div></div><div style="text-align:right;font-size:11px;color:var(--text-secondary)">5日前<div style="margin-top:4px"><button class="btn btn-sm" onclick="showScreen('detail')" style="font-size:10px">再閲覧</button></div></div></div>
+        </div>
+      </div>
+      <!-- Profile -->
+      <div id="mp-prof" style="display:none">
+        <h2 style="font-size:16px;font-weight:500;margin-bottom:16px;color:var(--text-primary)">プロフィール設定</h2>
+        <div class="card" style="max-width:480px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="field"><div class="flabel">姓</div><input class="finput" value="田中"></div>
+            <div class="field"><div class="flabel">名</div><input class="finput" value="太郎"></div>
+          </div>
+          <div class="field"><div class="flabel">メールアドレス</div><input class="finput" value="tanaka@email.com"></div>
+          <div class="field"><div class="flabel">電話番号</div><input class="finput" value="090-0000-0000"></div>
+          <div class="field"><div class="flabel">都道府県</div><select class="finput"><option>東京都</option><option>神奈川県</option><option>大阪府</option></select></div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-p" style="padding:9px 22px;font-size:13px">変更を保存</button>
+            <button class="btn" style="padding:9px 22px;font-size:13px;color:var(--red)">アカウント削除</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ADMIN ══════════ -->
+<div class="screen" id="s-admin">
+  <nav class="nav" style="background:#042C53;border-bottom-color:#0C447C">
+    <div class="logo" style="color:#fff"><div style="width:32px;height:32px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px"><i class="ti ti-settings"></i></div>管理者パネル</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:12px;color:var(--blue-mid)">admin@vrhomes.jp</span>
+      <button class="btn btn-sm" onclick="showScreen('login')" style="border-color:rgba(255,255,255,.2);color:#fff">ログアウト</button>
+    </div>
+  </nav>
+  <div class="admin-wrap">
+    <div class="admin-sidebar">
+      <div style="font-size:10px;font-weight:500;color:var(--text-secondary);letter-spacing:.06em;margin-bottom:10px">MENU</div>
+      <div class="admin-nav-item on" onclick="switchAdmin('props',this)"><i class="ti ti-building"></i>物件管理</div>
+      <div class="admin-nav-item" onclick="switchAdmin('users',this)"><i class="ti ti-users"></i>ユーザー管理</div>
+      <div class="admin-nav-item" onclick="switchAdmin('stats',this)"><i class="ti ti-chart-bar"></i>アクセス分析</div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div class="stat-mini"><div class="stat-mini-label">物件数</div><div class="stat-mini-val">24</div></div>
+        <div class="stat-mini"><div class="stat-mini-label">ユーザー数</div><div class="stat-mini-val">42</div></div>
+        <div class="stat-mini"><div class="stat-mini-label">今月のVR内見</div><div class="stat-mini-val">348</div></div>
+      </div>
+    </div>
+    <div class="admin-main">
+      <!-- Props -->
+      <div id="admin-props">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h2 style="font-size:16px;font-weight:500;color:var(--text-primary)">物件管理</h2>
+          <button class="btn btn-p btn-sm" onclick="toggleAddForm()"><i class="ti ti-plus"></i>物件を追加</button>
+        </div>
+        <div class="add-form" id="add-form">
+          <div style="font-size:14px;font-weight:500;margin-bottom:14px;color:var(--text-primary)">新規物件登録</div>
+          <div class="add-form-grid">
+            <div class="field"><div class="flabel">物件名 <span class="req">*</span></div><input class="finput" placeholder="例：コート渋谷" id="af-name"></div>
+            <div class="field"><div class="flabel">エリア <span class="req">*</span></div><input class="finput" placeholder="渋谷区" id="af-area"></div>
+            <div class="field"><div class="flabel">家賃 (円) <span class="req">*</span></div><input class="finput" type="number" placeholder="92000" id="af-rent"></div>
+            <div class="field"><div class="flabel">間取り <span class="req">*</span></div><select class="finput" id="af-madori"><option>1K</option><option>1DK</option><option>1LDK</option><option>2LDK</option><option>3LDK</option></select></div>
+            <div class="field"><div class="flabel">面積 (㎡)</div><input class="finput" type="number" placeholder="48"></div>
+            <div class="field"><div class="flabel">最寄り駅</div><input class="finput" placeholder="渋谷駅 徒歩3分"></div>
+          </div>
+          <div class="field"><div class="flabel">360°画像URL</div><input class="finput" placeholder="https://..."></div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:16px">
+            <input type="checkbox" checked style="accent-color:var(--blue)"> VR内見に対応する
+          </label>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-sm" onclick="toggleAddForm()">キャンセル</button>
+            <button class="btn btn-p btn-sm" onclick="addProperty()">登録する</button>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <div class="admin-table-head" style="grid-template-columns:2fr 1fr 1fr 1fr 90px">
+            <span>物件名</span><span>エリア</span><span>家賃</span><span>VR</span><span>操作</span>
+          </div>
+          <div id="prop-table-body">
+            <div class="admin-table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 90px">
+              <span style="font-weight:500">コート渋谷</span>
+              <span style="color:var(--text-secondary)">渋谷区</span>
+              <span>¥92,000</span>
+              <span><span class="tag tb" style="font-size:9px">対応</span></span>
+              <span style="display:flex;gap:5px">
+                <button class="btn btn-sm" style="font-size:10px;padding:3px 8px"><i class="ti ti-edit"></i></button>
+                <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:var(--red-border)" onclick="this.closest('.admin-table-row').remove()"><i class="ti ti-trash"></i></button>
+              </span>
+            </div>
+            <div class="admin-table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 90px">
+              <span style="font-weight:500">グランツ新宿</span>
+              <span style="color:var(--text-secondary)">新宿区</span>
+              <span>¥68,000</span>
+              <span><span class="tag tb" style="font-size:9px">対応</span></span>
+              <span style="display:flex;gap:5px">
+                <button class="btn btn-sm" style="font-size:10px;padding:3px 8px"><i class="ti ti-edit"></i></button>
+                <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:var(--red-border)" onclick="this.closest('.admin-table-row').remove()"><i class="ti ti-trash"></i></button>
+              </span>
+            </div>
+            <div class="admin-table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 90px">
+              <span style="font-weight:500">ソレイユ目黒</span>
+              <span style="color:var(--text-secondary)">目黒区</span>
+              <span>¥115,000</span>
+              <span><span class="tag tb" style="font-size:9px">対応</span></span>
+              <span style="display:flex;gap:5px">
+                <button class="btn btn-sm" style="font-size:10px;padding:3px 8px"><i class="ti ti-edit"></i></button>
+                <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:var(--red-border)" onclick="this.closest('.admin-table-row').remove()"><i class="ti ti-trash"></i></button>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Users -->
+      <div id="admin-users" style="display:none">
+        <h2 style="font-size:16px;font-weight:500;margin-bottom:16px;color:var(--text-primary)">ユーザー管理 <span style="font-size:13px;font-weight:400;color:var(--text-secondary)">— 42名</span></h2>
+        <div style="margin-bottom:12px;display:flex;gap:8px">
+          <input class="finput" placeholder="名前・メールで検索..." style="max-width:280px;padding:7px 11px;font-size:12px">
+          <select class="finput" style="width:auto;padding:7px 11px;font-size:12px"><option>全ステータス</option><option>有効</option><option>停止</option></select>
+        </div>
+        <div class="admin-table-wrap">
+          <div class="admin-table-head" style="grid-template-columns:2fr 2fr 1fr 1fr 70px">
+            <span>氏名</span><span>メール</span><span>登録日</span><span>ステータス</span><span>操作</span>
+          </div>
+          <div class="admin-table-row" style="grid-template-columns:2fr 2fr 1fr 1fr 70px">
+            <span style="font-weight:500">田中 太郎</span>
+            <span style="color:var(--text-secondary);font-size:11px">tanaka@email.com</span>
+            <span style="color:var(--text-secondary);font-size:11px">2024/01/15</span>
+            <span><span class="tag tg" style="font-size:9px">有効</span></span>
+            <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:var(--red-border)" onclick="this.closest('.admin-table-row').remove()"><i class="ti ti-trash"></i>削除</button>
+          </div>
+          <div class="admin-table-row" style="grid-template-columns:2fr 2fr 1fr 1fr 70px">
+            <span style="font-weight:500">鈴木 花子</span>
+            <span style="color:var(--text-secondary);font-size:11px">suzuki@email.com</span>
+            <span style="color:var(--text-secondary);font-size:11px">2024/02/03</span>
+            <span><span class="tag tg" style="font-size:9px">有効</span></span>
+            <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:var(--red-border)" onclick="this.closest('.admin-table-row').remove()"><i class="ti ti-trash"></i>削除</button>
+          </div>
+          <div class="admin-table-row" style="grid-template-columns:2fr 2fr 1fr 1fr 70px">
+            <span style="font-weight:500">山本 次郎</span>
+            <span style="color:var(--text-secondary);font-size:11px">yamamoto@email.com</span>
+            <span style="color:var(--text-secondary);font-size:11px">2024/03/20</span>
+            <span><span class="tag tr" style="font-size:9px">停止</span></span>
+            <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:var(--red-border)" onclick="this.closest('.admin-table-row').remove()"><i class="ti ti-trash"></i>削除</button>
+          </div>
+        </div>
+      </div>
+      <!-- Stats -->
+      <div id="admin-stats" style="display:none">
+        <h2 style="font-size:16px;font-weight:500;margin-bottom:16px;color:var(--text-primary)">アクセス分析</h2>
+        <div class="stat-card-grid">
+          <div class="stat-card"><div class="stat-card-label">今月のPV</div><div class="stat-card-val">1,240</div><div style="font-size:11px;color:var(--green);margin-top:4px">↑ 先月比 +12%</div></div>
+          <div class="stat-card"><div class="stat-card-label">VR内見数</div><div class="stat-card-val">348</div><div style="font-size:11px;color:var(--green);margin-top:4px">↑ 先月比 +24%</div></div>
+          <div class="stat-card"><div class="stat-card-label">新規登録</div><div class="stat-card-val">12</div><div style="font-size:11px;color:var(--text-secondary);margin-top:4px">今月</div></div>
+        </div>
+        <div class="card">
+          <div style="font-size:13px;font-weight:500;margin-bottom:14px;color:var(--text-primary)">人気物件ランキング（VR内見数）</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+              <span style="width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0">1</span>
+              <span style="flex:1;font-weight:500">コート渋谷</span>
+              <div class="bar-track"><div class="bar-fill" style="width:80%"></div></div>
+              <span style="color:var(--text-secondary);font-size:12px;min-width:36px;text-align:right">120回</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+              <span style="width:24px;height:24px;border-radius:50%;background:var(--blue-mid);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0">2</span>
+              <span style="flex:1;font-weight:500">ソレイユ目黒</span>
+              <div class="bar-track"><div class="bar-fill" style="width:60%;background:var(--blue-mid)"></div></div>
+              <span style="color:var(--text-secondary);font-size:12px;min-width:36px;text-align:right">89回</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+              <span style="width:24px;height:24px;border-radius:50%;background:#B5D4F4;color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0">3</span>
+              <span style="flex:1;font-weight:500">グランツ新宿</span>
+              <div class="bar-track"><div class="bar-fill" style="width:44%;background:#B5D4F4"></div></div>
+              <span style="color:var(--text-secondary);font-size:12px;min-width:36px;text-align:right">67回</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Data ── */
+const PROPS=[
+  {id:1,name:'コート渋谷',area:'渋谷区',station:'渋谷駅 徒歩3分',price:92000,size:48,madori:'2LDK',vr:true,tags:['ペット可','南向き']},
+  {id:2,name:'グランツ新宿',area:'新宿区',station:'新宿駅 徒歩8分',price:68000,size:33,madori:'1LDK',vr:true,tags:['オートロック']},
+  {id:3,name:'ソレイユ目黒',area:'目黒区',station:'目黒駅 徒歩5分',price:115000,size:62,madori:'3LDK',vr:true,tags:['南向き','宅配BOX']},
+  {id:4,name:'アーバン品川',area:'品川区',station:'品川駅 徒歩10分',price:75000,size:40,madori:'1LDK',vr:true,tags:['ネット無料']},
+  {id:5,name:'ルミエール恵比寿',area:'渋谷区',station:'恵比寿駅 徒歩6分',price:88000,size:45,madori:'2LDK',vr:true,tags:['バルコニー']},
+  {id:6,name:'シティ池袋',area:'豊島区',station:'池袋駅 徒歩4分',price:58000,size:28,madori:'1K',vr:false,tags:['24hゴミ']},
+];
+let favs=new Set([1]);
+let vrOnly=true;
+
+/* ── Screen switch ── */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  const map={login:0,top:1,map:2,detail:3,mypage:4,admin:5};
+  document.querySelectorAll('.tab')[map[id]].classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ── Auth tab ── */
+function switchAuth(t){
+  document.getElementById('atab-login').className='auth-tab'+(t==='login'?' on':'');
+  document.getElementById('atab-reg').className='auth-tab'+(t==='reg'?' on':'');
+  const f=document.getElementById('auth-form');
+  if(t==='reg'){
+    f.innerHTML=`
+      <div class="field"><div class="flabel">お名前</div><input class="finput" placeholder="田中 太郎"></div>
+      <div class="field"><div class="flabel">メールアドレス</div><input class="finput" type="text" placeholder="example@email.com"></div>
+      <div class="field"><div class="flabel">パスワード</div>
+        <div class="pass-wrap"><input class="finput" id="rpass" type="password" placeholder="8文字以上">
+        <button class="eye-btn" onclick="toggleEye('rpass',this)"><i class="ti ti-eye"></i></button></div>
+        <div class="str-bar"><div class="str-seg" id="s1"></div><div class="str-seg" id="s2"></div><div class="str-seg" id="s3"></div><div class="str-seg" id="s4"></div></div>
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text-secondary);margin-bottom:18px;cursor:pointer">
+        <input type="checkbox" id="terms-chk" style="accent-color:var(--blue);margin-top:2px" onchange="document.getElementById('reg-btn').disabled=!this.checked">
+        <span><span style="color:var(--blue);text-decoration:underline">利用規約</span>および<span style="color:var(--blue);text-decoration:underline">プライバシーポリシー</span>に同意します</span>
+      </label>
+      <button id="reg-btn" class="btn btn-p" disabled style="width:100%;padding:11px;font-size:14px;justify-content:center" onclick="showScreen('top')">
+        <i class="ti ti-user-plus"></i> 会員登録する
+      </button>`;
+    document.getElementById('rpass').addEventListener('input',function(){
+      const v=this.value,segs=[...document.querySelectorAll('.str-seg')];
+      segs.forEach(s=>{s.className='str-seg'});
+      if(v.length>=4){segs[0].className='str-seg weak';}
+      if(v.length>=6){segs[1].className='str-seg weak';}
+      if(v.length>=8){segs[0].className='str-seg mid';segs[1].className='str-seg mid';segs[2].className='str-seg mid';}
+      if(v.length>=10&&/[A-Z]/.test(v)){segs.forEach(s=>s.className='str-seg strong');}
+    });
+  } else {
+    f.innerHTML=`
+      <div class="field"><div class="flabel">メールアドレス</div><input class="finput" type="text" placeholder="example@email.com"></div>
+      <div class="field" style="margin-bottom:6px"><div class="flabel">パスワード</div>
+        <div class="pass-wrap"><input class="finput" id="lpass" type="password" placeholder="••••••••">
+        <button class="eye-btn" onclick="toggleEye('lpass',this)"><i class="ti ti-eye"></i></button></div>
+      </div>
+      <div style="text-align:right;font-size:11px;color:var(--blue);cursor:pointer;margin-bottom:18px">パスワードをお忘れですか？</div>
+      <button class="btn btn-p" style="width:100%;padding:11px;font-size:14px;justify-content:center" onclick="showScreen('top')">
+        ログイン <i class="ti ti-arrow-right"></i>
+      </button>`;
+  }
+}
+
+/* ── Eye toggle ── */
+function toggleEye(id,btn){
+  const inp=document.getElementById(id);
+  const isPass=inp.type==='password';
+  inp.type=isPass?'text':'password';
+  btn.innerHTML=isPass?'<i class="ti ti-eye-off"></i>':'<i class="ti ti-eye"></i>';
+}
+
+/* ── Card grid ── */
+function renderCards(){
+  const grid=document.getElementById('card-grid');
+  const data=vrOnly?PROPS.filter(p=>p.vr):PROPS;
+  grid.innerHTML=data.map(p=>{
+    const fav=favs.has(p.id);
+    return `<div class="prop-card" onclick="showScreen('detail')">
+      <div class="prop-img">
+        <i class="ti ti-building" style="font-size:30px;color:#85B7EB"></i>
+        ${p.vr?`<div class="vr-badge"><i class="ti ti-360-view" style="font-size:9px"></i> VR対応</div>`:''}
+        <div class="fav-btn${fav?' on':''}" onclick="event.stopPropagation();toggleFav(${p.id},this)"><i class="ti ti-heart"></i></div>
+      </div>
+      <div class="prop-body">
+        <div class="prop-price">¥${p.price.toLocaleString()}<span style="font-size:11px;font-weight:400;color:var(--text-secondary)">/月</span></div>
+        <div class="prop-name">${p.name}</div>
+        <div class="prop-loc"><i class="ti ti-map-pin"></i>${p.station}</div>
+        <div class="prop-tags">
+          <span class="tag tg">${p.madori}</span>
+          ${p.tags.map(t=>`<span class="tag tgr">${t}</span>`).join('')}
+        </div>
+      </div>
+      <div class="prop-footer">
+        <span class="prop-area">${p.size}㎡</span>
+        <span class="detail-link">詳細 <i class="ti ti-arrow-right" style="font-size:10px"></i></span>
+      </div>
+    </div>`;
+  }).join('');
+}
+renderCards();
+
+/* ── Fav toggle ── */
+function toggleFav(id,el){
+  if(favs.has(id)){favs.delete(id);el.classList.remove('on');}
+  else{favs.add(id);el.classList.add('on');}
+}
+function toggleFavDetail(){
+  const btn=document.getElementById('fav-detail-btn');
+  const on=btn.dataset.on==='1';
+  if(on){btn.innerHTML='<i class="ti ti-heart"></i> お気に入り登録';btn.dataset.on='0';btn.style='';  }
+  else{btn.innerHTML='<i class="ti ti-heart-filled"></i> お気に入り済み';btn.dataset.on='1';btn.style='color:var(--red);border-color:var(--red-border);background:var(--red-light)';}
+}
+
+/* ── Map pins ── */
+function togglePin(id){
+  const all=['pa','pb','pc'];
+  all.forEach(p=>{
+    const el=document.getElementById(p);
+    if(p===id){el.classList.toggle('show');}
+    else{el.classList.remove('show');}
+  });
+}
+
+/* ── VR viewer ── */
+function toggleVR(){
+  const start=document.getElementById('vr-start');
+  const ctrl=document.getElementById('vr-controls');
+  const tag=document.getElementById('room-tag');
+  const isOn=ctrl.style.display==='block';
+  start.style.display=isOn?'block':'none';
+  ctrl.style.display=isOn?'none':'block';
+  tag.style.display=isOn?'none':'block';
+}
+function switchRoom(el,name){
+  document.querySelectorAll('.room-pill').forEach(p=>{
+    p.style.background='rgba(24,95,165,.3)';p.style.color='#85B7EB';
+  });
+  el.style.background='rgba(24,95,165,.7)';el.style.color='var(--blue-mid)';
+  document.getElementById('room-tag').textContent='現在: '+name;
+}
+
+/* ── Mypage tabs ── */
+function switchMp(id,el){
+  ['fav','hist','prof'].forEach(k=>document.getElementById('mp-'+k).style.display=k===id?'block':'none');
+  document.querySelectorAll('.mp-nav-item').forEach(i=>i.classList.remove('on'));
+  el.classList.add('on');
+}
+
+/* ── Admin tabs ── */
+function switchAdmin(id,el){
+  ['props','users','stats'].forEach(k=>document.getElementById('admin-'+k).style.display=k===id?'block':'none');
+  document.querySelectorAll('.admin-nav-item').forEach(i=>i.classList.remove('on'));
+  el.classList.add('on');
+}
+function toggleAddForm(){
+  const f=document.getElementById('add-form');
+  f.style.display=f.style.display==='block'?'none':'block';
+}
+function addProperty(){
+  const name=document.getElementById('af-name').value||'新規物件';
+  const area=document.getElementById('af-area').value||'−';
+  const rent=document.getElementById('af-rent').value;
+  const madori=document.getElementById('af-madori').value;
+  const row=document.createElement('div');
+  row.className='admin-table-row';
+  row.style.gridTemplateColumns='2fr 1fr 1fr 1fr 90px';
+  row.style.background='var(--green-light)';
+  row.innerHTML=`
+    <span style="font-weight:500">${name}</span>
+    <span style="color:var(--text-secondary)">${area}</span>
+    <span>${rent?'¥'+Number(rent).toLocaleString():'−'}</span>
+    <span><span class="tag tb" style="font-size:9px">対応</span></span>
+    <span style="display:flex;gap:5px">
+      <button class="btn btn-sm" style="font-size:10px;padding:3px 8px"><i class="ti ti-edit"></i></button>
+      <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:var(--red-border)" onclick="this.closest('.admin-table-row').remove()"><i class="ti ti-trash"></i></button>
+    </span>`;
+  document.getElementById('prop-table-body').appendChild(row);
+  setTimeout(()=>row.style.background='',1500);
+  toggleAddForm();
+}
+</script>
+</body>
+</html>
